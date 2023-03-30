@@ -60,6 +60,9 @@ fn main() -> std::io::Result<()> {
             }
 
             y_start = false;
+        } else if arg == "-G" || arg == "-shared" {
+            // produce a shared object
+            args.push("--shared".into());
         } else {
             // insert arg unmodified
             args.push(arg.clone());
