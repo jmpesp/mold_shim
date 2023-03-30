@@ -7,6 +7,7 @@ fn main() -> std::io::Result<()> {
     let mut args = Vec::<String>::with_capacity(env::args().len());
     let mut z_start = false;
     let mut y_start = false;
+    let mut m_start = false;
 
     // XXX parse output of crle -64 to get standard lib paths instead of hard
     // coding?
@@ -63,6 +64,11 @@ fn main() -> std::io::Result<()> {
         } else if arg == "-G" || arg == "-shared" {
             // produce a shared object
             args.push("--shared".into());
+        } else if arg == "-M" {
+            m_start = true;
+        } else if m_start {
+            // drop the next argument - mold doesn't read a mapfile
+            m_start = false;
         } else {
             // insert arg unmodified
             args.push(arg.clone());
