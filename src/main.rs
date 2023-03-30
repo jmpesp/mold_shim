@@ -2,10 +2,11 @@ use std::env;
 use std::process::Command;
 
 fn main() -> std::io::Result<()> {
-    //std::fs::write("/tmp/args", format!("invoked with {:?}", env::args()))?;
+    std::fs::write("/tmp/args", format!("invoked with {:?}", env::args()))?;
 
     let mut args = Vec::<String>::with_capacity(env::args().len());
     let mut z_start = false;
+    let mut y_start = false;
 
     // XXX parse output of crle -64 to get standard lib paths instead of hard
     // coding?
@@ -44,13 +45,28 @@ fn main() -> std::io::Result<()> {
             z_start = false;
         } else if arg == "-Wl,-zdefaultextract" {
             // ignore, mold doesn't recognize this arg
+        } else if arg == "-Qy" {
+            // skip this - mold already adds an ident string
+        } else if arg == "-Y" {
+            y_start = true;
+        } else if y_start {
+            // -Y P,/usr/gcc/10/lib/amd64:/lib/amd64:/usr/lib/amd64
+            if let Some(path_list) = arg.strip_prefix("P,") {
+                for lib in path_list.split(':') {
+                    args.push(format!("-L{}", lib));
+                }
+            } else if arg == "y" {
+                // skip this - mold already adds an ident string
+            }
+
+            y_start = false;
         } else {
             // insert arg unmodified
             args.push(arg.clone());
         }
     }
 
-    //std::fs::write("/tmp/args", format!("passing {}", args.join(" ")))?;
+    std::fs::write("/tmp/args", format!("passing {}", args.join(" ")))?;
 
     env::set_current_dir(env::current_dir()?)?;
 
